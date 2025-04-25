@@ -1,4 +1,5 @@
 <?php
+ob_start(); 
 session_start();
 include_once "connect.php";
 
@@ -26,12 +27,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = mysqli_fetch_assoc($result);
 
             if (password_verify($password, $user['password'])) {
-                // Password is correct → start session
-                $_SESSION['user_id'] = $user['id'];
+                
+                $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_email'] = $user['email'];
 
-                header("Location: home.php"); // غيرها حسب صفحتك بعد تسجيل الدخول
+                header("Location: home.php"); 
                 exit();
             } else {
                 $errors['login'] = "Incorrect password.";
@@ -42,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
+<?php ob_end_flush(); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

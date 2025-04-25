@@ -77,6 +77,8 @@
 <body>
 
     <div class="container-wrapper">
+    <a href="addCategory.php" class="text-decoration-none">Categories</a>
+
         <h1 class="text-center mt-2" style="color:#9b4220;">Categories</h1>
 
         

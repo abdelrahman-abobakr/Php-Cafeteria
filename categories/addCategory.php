@@ -87,6 +87,8 @@
 <body>
 
     <div class="container-wrapper">
+    <a href="../Products/addProduct.php" class="text-decoration-none">Products</a>
+
         <h1 class="text-center mt-2" style="color:#9b4220;">Categories</h1>
 
         

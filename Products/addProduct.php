@@ -67,6 +67,9 @@
                 
                 $insert_query = "INSERT INTO products (name, description, price, image_path, category_id, is_active) VALUES ('$product_name', '$description', $price, '$file_new_path', $category, $isActive)";
                 mysqli_query($connection, $insert_query);
+
+                header("Location: products.php");
+                exit();
             }
 
 

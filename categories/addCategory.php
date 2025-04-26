@@ -8,9 +8,8 @@
     while($cat = mysqli_fetch_assoc($result)) {
         $categories[] = $cat;
     }
-    // if(count($categories)<1){
-    //     echo "";
-    // }
+  
+    
     if(isset($_POST['categoryBtn']) && isset($_POST['cName'])) {
         $categoryName = trim($_POST['cName']);
         $categoryExists = false;
@@ -146,7 +145,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" name="categoryBtn" class="btn btn-primary">Save changes</button>
+                        <button type="submit" name="categoryBtn" class="btn btn-primary">save</button>
                     </div>
                 </form>
                 </div>

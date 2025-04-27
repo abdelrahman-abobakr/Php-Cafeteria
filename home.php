@@ -225,7 +225,7 @@ if (isset($_POST['place_order'])) {
                 <!-- Cart Sidebar -->
                 <div class="col-md-3">
                     <div class="card sticky-top" style="top: 20px;">
-                        <div class="card-header bg-primary text-white">
+                        <div class="card-header text-white" style="background-color: #944639">
                             <h5 class="mb-0">Your Order</h5>
                         </div>
                         <div class="card-body">
@@ -302,7 +302,7 @@ if (isset($_POST['place_order'])) {
                         <div class="row g-3">
                             <?php foreach($products as $product): ?>
                                 <div class="col-12 col-sm-6 col-md-4 col-lg-4 mb-4">
-                                    <div class="card h-100 p-1">
+                                    <div class="card h-100 p-1 " style="background-color:rgb(251, 216, 210)">
                                         <img src="<?= str_replace('../', './', $product['image_path']) ?>" 
                                             class="card-img-top object-fit-cover" 
                                             alt="<?= $product['name']?>"
@@ -327,8 +327,8 @@ if (isset($_POST['place_order'])) {
                                             <form method="POST">
                                                 <input type="hidden" name="product_id" value="<?= $product['product_id'] ?>">
                                                 <div class="input-group">
-                                                    <input type="number" name="quantity" value="1" min="1" class="form-control">
-                                                    <button type="submit" name="add_to_cart" class="btn btn-warning">
+                                                    <input type="number" name="quantity" value="1" min="1" class="form-control" style="background-color:rgb(226, 185, 177)">
+                                                    <button type="submit" name="add_to_cart" class="btn btn-warning rounded rounded-1" style="background-color: #944639">
                                                         Add to Cart
                                                     </button>
                                                 </div>
@@ -337,6 +337,33 @@ if (isset($_POST['place_order'])) {
                                     </div>
                                 </div>
                             <?php endforeach; ?>
+                             <!-- Pagination -->
+                        <?php if($total_pages > 1): ?>
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    <!-- Previous Button -->
+                                    <li class="page-item <?= $current_page == 1 ? 'disabled' : '' ?>">
+                                        <a class="page-link" href="?page=<?= $current_page - 1 ?>" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <!-- Page Numbers -->
+                                    <?php for($i = 1; $i <= $total_pages; $i++): ?>
+                                        <li class="page-item <?= $i == $current_page ? 'active' : '' ?>">
+                                            <a class="page-link" href="?page=<?= $i ?>"><?= $i ?></a>
+                                        </li>
+                                    <?php endfor; ?>
+                                    
+                                    <!-- Next Button -->
+                                    <li class="page-item <?= $current_page == $total_pages ? 'disabled' : '' ?>">
+                                        <a class="page-link" href="?page=<?= $current_page + 1 ?>" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        <?php endif; ?>
                         </div>
                     <?php endif; ?>
                 </div>

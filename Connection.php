@@ -1,10 +1,15 @@
-<?php
 
-    $serverName = "localhost";
+    <?php
+    $servername = "localhost";
     $username = "root";
-    $pass = "";
-    $databaseName = "cafeteria";
-
-
-    $connection =   mysqli_connect($serverName, $username, $pass,$databaseName);
-
+    $password = "";
+    $dbname = "Cafeteria";
+    $port = 3307;
+    
+    $connection  = mysqli_connect($servername, $username, $password, $dbname, $port);
+    
+    if (!$connection) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
+    ?>
+    

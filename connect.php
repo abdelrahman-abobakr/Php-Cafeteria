@@ -3,11 +3,11 @@ $servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "Cafeteria";
-$port = 3307;
+$port = 8111;
 
-$myconnection = mysqli_connect($servername, $username, $password, $dbname, $port);
+$connection = mysqli_connect($servername, $username, $password, $dbname, $port);
 
-if (!$myconnection) {
+if (!$connection) {
     die("Connection failed: " . mysqli_connect_error());
 }
 ?>

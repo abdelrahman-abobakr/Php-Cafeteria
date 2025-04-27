@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         $query = "SELECT * FROM users WHERE email = '$email'";
-        $result = mysqli_query($myconnection, $query);
+        $result = mysqli_query($connection, $query);
 
         if ($result && mysqli_num_rows($result) > 0) {
             $user = mysqli_fetch_assoc($result);

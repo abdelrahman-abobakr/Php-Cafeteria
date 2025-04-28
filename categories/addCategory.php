@@ -5,8 +5,20 @@ if($_SESSION['user_role']!="admin")
     header("Location: ../unauth.php"); 
     exit();
 }
-    $categories = [];
     include_once("../Connection.php");
+
+    $user_id = $_SESSION["user_id"];
+    $query = "SELECT profile_image FROM users WHERE user_id = '$user_id' LIMIT 1";
+    $result = mysqli_query($connection, $query);
+
+    if (!$result) {
+        die('Query Error: ' . mysqli_error($connection));
+    }
+    $user = mysqli_fetch_assoc($result);
+
+
+
+    $categories = [];
 
     // Always load existing categories first
     $get_categories = "SELECT * FROM categories";
@@ -90,9 +102,46 @@ if($_SESSION['user_role']!="admin")
     <title>Add Category</title>
 </head>
 <body>
-
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../home.php">Coffee Drink</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="addCategory.php">Categories</a>
+                    </li>                   
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="../products/products.php">Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../products/addProduct.php">Add Product</a>
+                    </li>                   
+                    <li class="nav-item">
+                        <a class="nav-link" href="../products/deletedProducts.php">Deleted Products</a>
+                    </li>                   
+                </ul>
+                <form method="POST" class="d-flex me-3" role="search">
+                    <input class="form-control me-2" type="text" placeholder="product" name="searchName">
+                    <button class="btn btn-outline-success" name="searchBtn" type="submit">Search</button>
+                </form>
+                <form method="POST" class="d-flex me-3" role="search">
+                    <input class="form-control me-2" type="text" placeholder="category" name="categorySearch">
+                    <button class="btn btn-outline-success" name="searchCategoryBtn" type="submit">Search</button>
+                </form>
+                <div class="user-box d-flex align-items-center">
+                    <img src="../resources/uploads/<?= htmlspecialchars($user['profile_image'] ?? 'default.jpg') ?>" 
+                        class="rounded-circle border border-secondary" 
+                        style="width: 40px; height: 40px; object-fit: cover;" 
+                        alt="User Photo">
+                    <span class="ms-2 fw-bold"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+                </div>
+            </div>
+        </div>
+    </nav>
     <div class="container-wrapper">
-    <a href="../Products/products.php" class="text-decoration-none">Products</a>
 
         <h1 class="text-center mt-2" style="color:#9b4220;">Categories</h1>
 

@@ -97,19 +97,25 @@ if($_SESSION['user_role']!="admin")
     <title>Add Product</title>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="home.php">Coffee Drink</a>
+            <a class="navbar-brand" href="../home.php">Coffee Drink</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="home.php">Drinks</a>
+                        <a class="nav-link" href="../categories/addCategory.php">Categories</a>
+                    </li>                   
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="products.php">Products</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="orders.php">Orders</a>
+                        <a class="nav-link" href="addProduct.php">Add Product</a>
+                    </li>                   
+                    <li class="nav-item">
+                        <a class="nav-link" href="deletedProducts.php">Deleted Products</a>
                     </li>                   
                 </ul>
                 <form method="POST" class="d-flex me-3" role="search">
@@ -132,11 +138,17 @@ if($_SESSION['user_role']!="admin")
     </nav>
     
     <div class="container-wrapper p-4">
-        <a href="./addProduct.php" class="text-decoration-none">Add Product</a><br>
-        <a href="./deletedProducts.php" class="text-decoration-none">Deleted Products</a>
         <div class="container">
             <h1 class="text-center mt-2 " style="color:#944639">Products</h1>           
-
+            <div class="dropdown mb-2">
+                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Product Pages
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="addProduct.php">Add Product</a></li>
+                    <li><a class="dropdown-item" href="deletedProducts.php">Deleted Products</a></li>
+                </ul>
+            </div>
             <div class="row col-lg-11 offset-lg-1 col-md-8 offset-md-2 border border-3 rounded rounded-4 p-4 bg-white custom-border">    
                 <?php if(count($products)>0):?>
                     <div class="container">

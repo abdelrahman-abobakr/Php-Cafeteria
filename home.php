@@ -227,11 +227,12 @@
                     <button class="btn btn-outline-success" name="searchCategoryBtn" type="submit">Search</button>
                 </form>
                 <div class="user-box d-flex align-items-center">
-                    <img src="uploads/<?= htmlspecialchars($user['profile_image'] ?? 'default.jpg') ?>" 
+                    <img src="resources/uploads/<?= htmlspecialchars($user['profile_image'] ?? 'default.jpg') ?>" 
                         class="rounded-circle border border-secondary" 
                         style="width: 40px; height: 40px; object-fit: cover;" 
                         alt="User Photo">
                     <span class="ms-2 fw-bold"><?= htmlspecialchars($user_name) ?></span>
+                    <a href="logout.php" class="btn btn-danger mx-3">Log out</a>
                 </div>
             </div>
         </div>

@@ -1,14 +1,25 @@
 <?php
-session_start();
-if($_SESSION['user_role']!="admin")
-{
-    header("Location: ../unauth.php"); 
-    exit();
-}
+    include_once("../Connection.php");
+    session_start();
+    if($_SESSION['user_role']!="admin")
+    {
+        header("Location: ../unauth.php"); 
+        exit();
+    }
+
+    $user_id = $_SESSION["user_id"];
+    $query = "SELECT profile_image FROM users WHERE user_id = '$user_id' LIMIT 1";
+    $result = mysqli_query($connection, $query);
+
+    if (!$result) {
+        die('Query Error: ' . mysqli_error($connection));
+    }
+
+    
+    $user = mysqli_fetch_assoc($result);
     $categories=[];
     $products=[];
 
-    include_once("../Connection.php");
     
     // retrieving all categories
     $categories_query = "SELECT name, category_id FROM categories";
@@ -90,14 +101,49 @@ if($_SESSION['user_role']!="admin")
     <title>Add Product</title>
 </head>
 <body>
-
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../home.php">Coffee Drink</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../categories/addCategory.php">Categories</a>
+                    </li>                   
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="products.php">Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="addProduct.php">Add Product</a>
+                    </li>                   
+                    <li class="nav-item">
+                        <a class="nav-link" href="deletedProducts.php">Deleted Products</a>
+                    </li>                   
+                </ul>
+                <form method="POST" class="d-flex me-3" role="search">
+                    <input class="form-control me-2" type="text" placeholder="product" name="searchName">
+                    <button class="btn btn-outline-success" name="searchBtn" type="submit">Search</button>
+                </form>
+                <form method="POST" class="d-flex me-3" role="search">
+                    <input class="form-control me-2" type="text" placeholder="category" name="categorySearch">
+                    <button class="btn btn-outline-success" name="searchCategoryBtn" type="submit">Search</button>
+                </form>
+                <div class="user-box d-flex align-items-center">
+                    <img src="../resources/uploads/<?= htmlspecialchars($user['profile_image'] ?? 'default.jpg') ?>" 
+                        class="rounded-circle border border-secondary" 
+                        style="width: 40px; height: 40px; object-fit: cover;" 
+                        alt="User Photo">
+                    <span class="ms-2 fw-bold"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+                </div>
+            </div>
+        </div>
+    </nav>
     
     <div class="container-wrapper p-4">
-        <a href="../categories/addCategory.php" class="text-decoration-none">Categories</a><br>
-        <a href="./addProduct.php" class="text-decoration-none">Add Product</a><br>
-        <a href="./products.php" class="text-decoration-none">Products</a>
         <div class="container">
-            <h1 class="text-center mt-2 " style="color:#944639">Products</h1>           
+            <h1 class="text-center mt-2 " style="color:#944639">Deleted Products</h1>           
 
             <div class="row col-lg-11 offset-lg-1 col-md-8 offset-md-2 border border-3 rounded rounded-4 p-4 bg-white custom-border">    
                 <?php if(count($products)>0):?>

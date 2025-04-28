@@ -22,11 +22,22 @@ $products_query = "SELECT * FROM products WHERE deleted_at IS NULL";
 $products_result = mysqli_query($connection, $products_query);
 
 // Fetch all orders with user information, sorted by latest first
-$orders_query = "SELECT o.*, u.name as user_name 
+$orders_query = "SELECT o.*, u.name as user_name
                 FROM orders o
                 JOIN users u ON o.user_id = u.user_id
                 ORDER BY o.created_at DESC";
 $orders_result = mysqli_query($connection, $orders_query);
+
+// Create an array to store order items for each order
+$order_items = [];
+$items_query = "SELECT oi.*, p.name as product_name, p.image_path 
+                FROM order_items oi
+                JOIN products p ON oi.product_id = p.product_id
+                ORDER BY oi.order_id";
+$items_result = mysqli_query($connection, $items_query);
+while($item = mysqli_fetch_assoc($items_result)) {
+    $order_items[$item['order_id']][] = $item;
+}
 
 // Static Rooms
 $rooms = ["Room 101", "Room 102", "Room 103", "Room 104"];
@@ -78,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     <meta charset="UTF-8">
     <title>Orders Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
             background-image: url('../resources/backgrounds/pexels-marta-dzedyshko-1042863-2067431.jpg');
@@ -92,53 +104,124 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
             background-color: rgba(255, 255, 255, 0.85);
             border-radius: 15px;
             margin: 20px auto;
+            padding: 20px;
         }
         .custom-border {
             border-color: #944639 !important;
         }
-        .order-table {
+        
+        /* Products Table Specific Styles */
+        .products-table {
             background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .order-table th {
+        
+        .products-table thead {
+            background-color: #944639;
+            color: white;
+        }
+        
+        .products-table th {
+            padding: 12px 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .products-table td {
+            padding: 10px 15px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        
+        .products-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .products-table tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .products-table .input-group {
+            justify-content: center;
+            width: 140px;
+            margin: 0 auto;
+        }
+        
+        .products-table .input-group .form-control {
+            max-width: 50px;
+            text-align: center;
+        }
+        
+        .products-table img {
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+          
+        /* Form Styles */
+        .form-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        }
+        
+        h1, h2 {
+            color: #944639;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background-color: #944639;
+            border-color: #944639;
+        }
+        
+        .btn-primary:hover {
+            background-color: #7a3a2f;
+            border-color: #7a3a2f;
+        }
+        
+        /* Collapsible Row Styles */
+        .collapse.show {
             background-color: #f8f9fa;
         }
-        .status-form {
+
+        .collapse .order-items-container {
             display: flex;
-            align-items: center;
-            gap: 5px;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
         }
-        .status-form select {
-            width: 150px;
+
+        .btn-link i.bi-chevron-down {
+            transition: transform 0.2s;
         }
-        .status-form button {
-            white-space: nowrap;
+
+        .btn-link[aria-expanded="true"] i.bi-chevron-down {
+            transform: rotate(180deg);
         }
-        .badge-processing {
-            background-color: #ffc107;
-            color: #000;
+
+        .order-table .collapse td {
+            padding: 0;
+            border: none;
         }
-        .badge-out_for_delivery {
-            background-color: #0d6efd;
-            color: #fff;
-        }
-        .badge-done {
-            background-color: #198754;
-            color: #fff;
-        }
-        .badge-cancelled {
-            background-color: #dc3545;
-            color: #fff;
+
+        .order-table .collapse .p-3 {
+            border-top: 1px solid #dee2e6;
         }
     </style>
 </head>
 <body>
 
-<div class="container-wrapper p-4">
+<div class="container-wrapper">
     <div class="container">
-        <h1 class="text-center mt-2" style="color:#944639">Orders Management</h1>
+        <h1 class="text-center mt-2">Orders Management</h1>
 
         <!-- Create New Order Section -->
-        <div class="row col-lg-11 offset-lg-1 col-md-8 offset-md-2 border border-3 rounded rounded-4 p-4 bg-white custom-border mb-4">
+        <div class="row form-section">
             <h2 class="text-center mb-4">Create New Order</h2>
             <form method="POST">
                 <!-- User & Room -->
@@ -170,38 +253,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
                     <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Any special instructions..."></textarea>
                 </div>
 
-                <!-- Products Table -->
-                <div class="table-responsive mb-3">
-                    <table class="table table-bordered table-striped align-middle">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Product</th>
-                                <th>Price (EGP)</th>
-                                <th>Quantity</th>
-                                <th>Subtotal (EGP)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php 
-                            // Reset products result pointer
-                            mysqli_data_seek($products_result, 0);
-                            while($product = mysqli_fetch_assoc($products_result)): ?>
+                <!-- All Products Table Section -->
+                <div class="row form-section">
+                    <h2 class="text-center mb-4">All Products</h2>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover order-table">
+                            <thead>
                                 <tr>
-                                    <td><?= htmlspecialchars($product['name']) ?></td>
-                                    <td><?= $product['price'] ?></td>
-                                    <td>
-                                        <div class="input-group">
-                                            <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity(<?= $product['product_id'] ?>)">-</button>
-                                            <input type="text" name="products[<?= $product['product_id'] ?>][quantity]" id="quantity_<?= $product['product_id'] ?>" value="0" class="form-control text-center" readonly>
-                                            <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity(<?= $product['product_id'] ?>)">+</button>
-                                        </div>
-                                        <input type="hidden" name="products[<?= $product['product_id'] ?>][price]" value="<?= $product['price'] ?>">
-                                    </td>
-                                    <td><span id="subtotal_<?= $product['product_id'] ?>">0.00</span></td>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Price (EGP)</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal (EGP)</th>
                                 </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php mysqli_data_seek($products_result, 0); ?>
+                                <?php while($product = mysqli_fetch_assoc($products_result)): ?>
+                                    <tr>
+                                        <td>
+                                            <?php if (!empty($product['image_path'])): ?>
+                                                <img src="../Uploads/<?= htmlspecialchars($product['image_path']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" style="width: 60px; height: 60px; object-fit: cover;">
+                                            <?php else: ?>
+                                                <img src="../Uploads/default.jpg" alt="Default Image" style="width: 60px; height: 60px; object-fit: cover;">
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($product['name']) ?></td>
+                                        <td><?= number_format($product['price'], 2) ?></td>
+                                        <td>
+                                            <div class="input-group">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity(<?= $product['product_id'] ?>)">-</button>
+                                                <input type="text" name="products[<?= $product['product_id'] ?>][quantity]" id="quantity_<?= $product['product_id'] ?>" value="0" class="form-control text-center" readonly>
+                                                <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity(<?= $product['product_id'] ?>)">+</button>
+                                            </div>
+                                            <input type="hidden" name="products[<?= $product['product_id'] ?>][price]" value="<?= $product['price'] ?>">
+                                        </td>
+                                        <td><span id="subtotal_<?= $product['product_id'] ?>">0.00</span></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Total Amount -->
@@ -212,61 +304,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
 
                 <!-- Submit -->
                 <div class="text-center">
-                    <button type="submit" name="confirm_order" class="btn btn-primary w-50">Confirm Order</button>
+                    <button type="submit" name="confirm_order" class="btn btn-primary w-50 py-2">Confirm Order</button>
                 </div>
             </form>
         </div>
 
-        <!-- All Orders Table Section -->
-        <div class="row col-lg-11 offset-lg-1 col-md-8 offset-md-2 border border-3 rounded rounded-4 p-4 bg-white custom-border">
-            <h2 class="text-center mb-4">All Orders</h2>
-            <div class="table-responsive">
-                <table class="table order-table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>User</th>
-                            <th>Room</th>
-                            <th>Total Amount</th>
-                            <th>Status</th>
-                            <th>Notes</th>
-                            <th>Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        // Reset orders result pointer
-                        mysqli_data_seek($orders_result, 0);
-                        while($order = mysqli_fetch_assoc($orders_result)): ?>
-                            <tr>
-                                <td><?= $order['order_id'] ?></td>
-                                <td><?= htmlspecialchars($order['user_name']) ?></td>
-                                <td><?= htmlspecialchars($order['room']) ?></td>
-                                <td>EGP <?= number_format($order['total_amount'], 2) ?></td>
-                                <td>
-                                    <form method="POST" class="status-form">
-                                        <input type="hidden" name="order_id" value="<?= $order['order_id'] ?>">
-                                        <select name="status" class="form-select form-select-sm">
-                                            <option value="processing" <?= $order['status'] == 'processing' ? 'selected' : '' ?>>Processing</option>
-                                            <option value="out_for_delivery" <?= $order['status'] == 'out_for_delivery' ? 'selected' : '' ?>>Out for Delivery</option>
-                                            <option value="done" <?= $order['status'] == 'done' ? 'selected' : '' ?>>Done</option>
-                                            <option value="cancelled" <?= $order['status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                                        </select>
-                                        <button type="submit" name="update_status" class="btn btn-sm btn-success">Save</button>
-                                    </form>
-                                </td>
-                                <td><?= !empty($order['notes']) ? htmlspecialchars($order['notes']) : '—' ?></td>
-                                <td><?= date('M j, Y g:i A', strtotime($order['created_at'])) ?></td>
-                                <td>
-    <a href="user_orders.php?user_id=<?= $order['user_id'] ?>" class="btn btn-sm btn-info">View</a>
-</td>
-                            </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -308,6 +350,18 @@ function calculateTotal() {
     document.getElementById('totalAmount').innerText = total.toFixed(2);
     document.getElementById('total_amount_input').value = total.toFixed(2);
 }
+
+// Optional: Accordion-like behavior for collapsible sections
+document.querySelectorAll('.order-table .btn-link').forEach(button => {
+    button.addEventListener('click', function () {
+        // Close all other collapsible sections
+        document.querySelectorAll('.order-table .collapse.show').forEach(collapse => {
+            if (collapse.id !== this.getAttribute('data-bs-target').substring(1)) {
+                new bootstrap.Collapse(collapse, { toggle: false }).hide();
+            }
+        });
+    });
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>

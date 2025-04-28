@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // إذا لا يوجد أخطاء، نقوم بإضافة المستخدم إلى قاعدة البيانات
     if (empty($errors)) {
         // حفظ الصورة
-        $upload_dir = dirname(__DIR__) . '/uploads/';
+        $upload_dir = dirname(__DIR__) . '/resources//';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
         $img_name = time() . "_" . basename($fileName);
         $target_path = $upload_dir . $img_name;

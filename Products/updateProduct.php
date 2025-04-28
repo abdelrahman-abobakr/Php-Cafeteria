@@ -5,6 +5,7 @@
         header("Location: ../unauth.php"); 
         exit();
     }
+    include_once("../Connection.php");
 
     $user_id = $_SESSION["user_id"];
     $query = "SELECT profile_image FROM users WHERE user_id = '$user_id' LIMIT 1";
@@ -20,7 +21,6 @@
 
     $id = $_GET['id'];
 
-    include_once("../Connection.php");
     
     $product_query = "SELECT * FROM products WHERE product_id = $id";
     $product_result = mysqli_query($connection, $product_query);
@@ -141,7 +141,7 @@
     <title>Add Product</title>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary mb-5">
         <div class="container-fluid">
             <a class="navbar-brand" href="../home.php">Coffee Drink</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -149,21 +149,76 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="../categories/addCategory.php">Categories</a>
-                    </li>                   
-                    <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="products.php">Products</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="addProduct.php">Add Product</a>
-                    </li>                   
-                    <li class="nav-item">
-                        <a class="nav-link" href="deletedProducts.php">Deleted Products</a>
-                    </li>                   
+                    <div class="dropdown pt-2 ms-2">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Products
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="products.php">Products</a>
+                            </li>   
+                            <li class="nav-item">
+                                <a class="nav-link" href="addProduct.php">Add Products</a>
+                            </li>  
+                            <li class="nav-item">
+                                <a class="nav-link" href="deletedProducts.php">Deleted Products</a>
+                            </li>  
+
+                        </ul>
+                    </div>                  
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Categories
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../categories/addCategory.php">Categories</a>
+                            </li>    
+
+                        </ul>
+                    </div>                  
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Orders
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../orders/orders.php">Orders</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../orders/admin_orders.php">Add Order</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../orders/checks.php">Checks</a>
+                            </li>    
+
+                        </ul>
+                    </div>                                   
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Users
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../users/users.php">Users</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../users/add_user.php">Add User</a>
+                            </li>       
+
+                        </ul>
+                    </div>                                   
+                                     
                 </ul>
-                
-                
+                <div class="user-box d-flex align-items-center">
+                    <img src="../resources/uploads/<?= htmlspecialchars($user['profile_image']) ?>"
+                        class="rounded-circle border border-secondary" 
+                        style="width: 40px; height: 40px; object-fit: cover;" 
+                        alt="User Photo">
+                    <span class="ms-2 fw-bold"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+                </div>
+                <a href="../logout.php" class="btn btn-danger mx-3">Log out</a>
+
             </div>
         </div>
     </nav>

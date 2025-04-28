@@ -13,6 +13,17 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+$user_id = $_SESSION['user_id'];
+$query = "SELECT profile_image FROM users WHERE user_id = '$user_id' LIMIT 1";
+$result = mysqli_query($connection, $query);
+
+if (!$result) {
+    die('Query Error: ' . mysqli_error($connection));
+}
+
+$user = mysqli_fetch_assoc($result);
+
+
 // Fetch users (all users)
 $users_query = "SELECT * FROM users";
 $users_result = mysqli_query($connection, $users_query);
@@ -215,102 +226,183 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     </style>
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary mb-5">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../home.php">Coffee Drink</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <div class="dropdown pt-2 ms-2">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Products
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../products/products.php">Products</a>
+                            </li>   
+                            <li class="nav-item">
+                                <a class="nav-link" href="../products/addProduct.php">Add Products</a>
+                            </li>  
+                            <li class="nav-item">
+                                <a class="nav-link" href="../products/deletedProducts.php">Deleted Products</a>
+                            </li>  
 
-<div class="container-wrapper">
-    <div class="container">
-        <h1 class="text-center mt-2">Orders Management</h1>
+                        </ul>
+                    </div>                  
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Categories
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../categories/addCategory.php">Categories</a>
+                            </li>    
 
-        <!-- Create New Order Section -->
-        <div class="row form-section">
-            <h2 class="text-center mb-4">Create New Order</h2>
-            <form method="POST">
-                <!-- User & Room -->
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="user" class="form-label">Select User</label>
-                        <select class="form-select" id="user" name="user" required>
-                            <option value="" disabled selected>Choose a user</option>
-                            <?php while($user = mysqli_fetch_assoc($users_result)): ?>
-                                <option value="<?= $user['user_id'] ?>"><?= htmlspecialchars($user['name']) ?></option>
-                            <?php endwhile; ?>
-                        </select>
-                    </div>
+                        </ul>
+                    </div>                  
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Orders
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="orders.php">Orders</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="admin_orders.php">Add Order</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="checks.php">Checks</a>
+                            </li>    
 
-                    <div class="col-md-6">
-                        <label for="room" class="form-label">Select Room</label>
-                        <select class="form-select" id="room" name="room" required>
-                            <option value="" disabled selected>Choose a room</option>
-                            <?php foreach($rooms as $room): ?>
-                                <option value="<?= htmlspecialchars($room) ?>"><?= htmlspecialchars($room) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                        </ul>
+                    </div>                                   
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Users
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../users/users.php">Users</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../users/add_user.php">Add User</a>
+                            </li>       
+
+                        </ul>
+                    </div>                                   
+                                     
+                </ul>
+                <div class="user-box d-flex align-items-center">
+                    <img src="../resources/uploads/<?= htmlspecialchars($user['profile_image']) ?>"
+                        class="rounded-circle border border-secondary" 
+                        style="width: 40px; height: 40px; object-fit: cover;" 
+                        alt="User Photo">
+                    <span class="ms-2 fw-bold"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
                 </div>
+                <a href="../logout.php" class="btn btn-danger mx-3">Log out</a>
 
-                <!-- Notes -->
-                <div class="mb-3">
-                    <label for="notes" class="form-label">Notes</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Any special instructions..."></textarea>
-                </div>
-
-                <!-- All Products Table Section -->
-                <div class="row form-section">
-                    <h2 class="text-center mb-4">All Products</h2>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover order-table">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Name</th>
-                                    <th>Price (EGP)</th>
-                                    <th>Quantity</th>
-                                    <th>Subtotal (EGP)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php mysqli_data_seek($products_result, 0); ?>
-                                <?php while($product = mysqli_fetch_assoc($products_result)): ?>
-                                    <tr>
-                                        <td>
-                                            <?php if (!empty($product['image_path'])): ?>
-                                                <img src="../Uploads/<?= htmlspecialchars($product['image_path']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" style="width: 60px; height: 60px; object-fit: cover;">
-                                            <?php else: ?>
-                                                <img src="../Uploads/default.jpg" alt="Default Image" style="width: 60px; height: 60px; object-fit: cover;">
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?= htmlspecialchars($product['name']) ?></td>
-                                        <td><?= number_format($product['price'], 2) ?></td>
-                                        <td>
-                                            <div class="input-group">
-                                                <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity(<?= $product['product_id'] ?>)">-</button>
-                                                <input type="text" name="products[<?= $product['product_id'] ?>][quantity]" id="quantity_<?= $product['product_id'] ?>" value="0" class="form-control text-center" readonly>
-                                                <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity(<?= $product['product_id'] ?>)">+</button>
-                                            </div>
-                                            <input type="hidden" name="products[<?= $product['product_id'] ?>][price]" value="<?= $product['price'] ?>">
-                                        </td>
-                                        <td><span id="subtotal_<?= $product['product_id'] ?>">0.00</span></td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Total Amount -->
-                <div class="mb-3 text-end">
-                    <h4>Total: EGP <span id="totalAmount">0.00</span></h4>
-                    <input type="hidden" name="total_amount" id="total_amount_input" value="0">
-                </div>
-
-                <!-- Submit -->
-                <div class="text-center">
-                    <button type="submit" name="confirm_order" class="btn btn-primary w-50 py-2">Confirm Order</button>
-                </div>
-            </form>
+            </div>
         </div>
+    </nav>
+    <div class="container-wrapper">
+    
+        <div class="container">
+            <h1 class="text-center mt-2">Orders Management</h1>
 
+            <!-- Create New Order Section -->
+            <div class="row form-section">
+                <h2 class="text-center mb-4">Create New Order</h2>
+                <form method="POST">
+                    <!-- User & Room -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="user" class="form-label">Select User</label>
+                            <select class="form-select" id="user" name="user" required>
+                                <option value="" disabled selected>Choose a user</option>
+                                <?php while($user = mysqli_fetch_assoc($users_result)): ?>
+                                    <option value="<?= $user['user_id'] ?>"><?= htmlspecialchars($user['name']) ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="room" class="form-label">Select Room</label>
+                            <select class="form-select" id="room" name="room" required>
+                                <option value="" disabled selected>Choose a room</option>
+                                <?php foreach($rooms as $room): ?>
+                                    <option value="<?= htmlspecialchars($room) ?>"><?= htmlspecialchars($room) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Any special instructions..."></textarea>
+                    </div>
+
+                    <!-- All Products Table Section -->
+                    <div class="row form-section">
+                        <h2 class="text-center mb-4">All Products</h2>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover order-table">
+                                <thead>
+                                    <tr>
+                                        <th>Image</th>
+                                        <th>Name</th>
+                                        <th>Price (EGP)</th>
+                                        <th>Quantity</th>
+                                        <th>Subtotal (EGP)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php mysqli_data_seek($products_result, 0); ?>
+                                    <?php while($product = mysqli_fetch_assoc($products_result)): ?>
+                                        <tr>
+                                            <td>
+                                                <?php if (!empty($product['image_path'])): ?>
+                                                    <img src="../Uploads/<?= htmlspecialchars($product['image_path']) ?>" alt="<?= htmlspecialchars($product['name']) ?>" style="width: 60px; height: 60px; object-fit: cover;">
+                                                <?php else: ?>
+                                                    <img src="../Uploads/default.jpg" alt="Default Image" style="width: 60px; height: 60px; object-fit: cover;">
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?= htmlspecialchars($product['name']) ?></td>
+                                            <td><?= number_format($product['price'], 2) ?></td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity(<?= $product['product_id'] ?>)">-</button>
+                                                    <input type="text" name="products[<?= $product['product_id'] ?>][quantity]" id="quantity_<?= $product['product_id'] ?>" value="0" class="form-control text-center" readonly>
+                                                    <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity(<?= $product['product_id'] ?>)">+</button>
+                                                </div>
+                                                <input type="hidden" name="products[<?= $product['product_id'] ?>][price]" value="<?= $product['price'] ?>">
+                                            </td>
+                                            <td><span id="subtotal_<?= $product['product_id'] ?>">0.00</span></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Total Amount -->
+                    <div class="mb-3 text-end">
+                        <h4>Total: EGP <span id="totalAmount">0.00</span></h4>
+                        <input type="hidden" name="total_amount" id="total_amount_input" value="0">
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="text-center">
+                        <button type="submit" name="confirm_order" class="btn btn-primary w-50 py-2">Confirm Order</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
     </div>
-</div>
 
 <!-- Scripts -->
 <script>

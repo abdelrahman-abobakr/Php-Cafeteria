@@ -29,7 +29,7 @@ if (isset($_POST["btn"])) {
         if ($_FILES["image"]["name"] != "") {
             $filename = $_FILES["image"]["name"];
             $tempname = $_FILES["image"]["tmp_name"];
-            $folder = "../uploads/" . time() . "_" . $filename;
+            $folder = "../resources/uploads/" . time() . "_" . $filename;
             move_uploaded_file($tempname, $folder);
             $image_name = basename($folder);
         } else {
@@ -150,6 +150,7 @@ if (isset($_POST["btn"])) {
     </style>
 </head>
 <body>
+    
 <div class="form-container">
     <h2>Edit User Profile</h2>
     <form method="POST" enctype="multipart/form-data" novalidate>
@@ -188,7 +189,7 @@ if (isset($_POST["btn"])) {
         <!-- Image -->
         <div class="mb-4">
             <div class="image-container">
-                <img src='../uploads/<?= htmlspecialchars($myuser["profile_image"]) ?>' class="user-image" 
+                <img src='../resources/uploads/<?= htmlspecialchars($myuser["profile_image"]) ?>' class="user-image" 
                      onerror="this.src='https://via.placeholder.com/120?text=No+Image'"><br>
                 <label class="form-label">Change Profile Picture</label>
             </div>

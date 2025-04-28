@@ -7,6 +7,17 @@ if($_SESSION['user_role']!="admin")
 }
 include_once "../connect.php"; 
 
+$user_id = $_SESSION['user_id'];
+$query = "SELECT profile_image FROM users WHERE user_id = '$user_id' LIMIT 1";
+$result = mysqli_query($connection, $query);
+
+if (!$result) {
+    die('Query Error: ' . mysqli_error($connection));
+}
+
+$user = mysqli_fetch_assoc($result);
+
+
 // التحقق هل تم طلب عرض الـ Admins فقط؟
 if (isset($_GET['filter']) && $_GET['filter'] === 'admins') {
     $sql = "SELECT * FROM users WHERE role = 'admin'"; 
@@ -30,7 +41,6 @@ $myusers = mysqli_query($connection, $sql);
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f5f1ea;
-            padding: 40px;
             color: #4a3f35;
         }
         .container {
@@ -150,6 +160,87 @@ $myusers = mysqli_query($connection, $sql);
     </style>
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary mb-5">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="../home.php">Coffee Drink</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <div class="dropdown pt-2 ms-2">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Products
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../products/products.php">Products</a>
+                            </li>   
+                            <li class="nav-item">
+                                <a class="nav-link" href="../products/addProduct.php">Add Products</a>
+                            </li>  
+                            <li class="nav-item">
+                                <a class="nav-link" href="../products/deletedProducts.php">Deleted Products</a>
+                            </li>  
+
+                        </ul>
+                    </div>                  
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Categories
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../categories/addCategory.php">Categories</a>
+                            </li>    
+
+                        </ul>
+                    </div>                  
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Orders
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../orders/orders.php">Orders</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../orders/admin_orders.php">Add Order</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="../orders/checks.php">Checks</a>
+                            </li>    
+
+                        </ul>
+                    </div>                                   
+                    <div class="dropdown pt-2 ms-3">
+                        <p class=" dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Users
+                        </p>
+                        <ul class="dropdown-menu">
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="users.php">Users</a>
+                            </li>    
+                            <li class="nav-item">
+                                <a class="nav-link" aria-current="page" href="add_user.php">Add User</a>
+                            </li>       
+
+                        </ul>
+                    </div>                                   
+                                     
+                </ul>
+                <div class="user-box d-flex align-items-center">
+                    <img src="../resources/uploads/<?= htmlspecialchars($user['profile_image']) ?>"
+                        class="rounded-circle border border-secondary" 
+                        style="width: 40px; height: 40px; object-fit: cover;" 
+                        alt="User Photo">
+                    <span class="ms-2 fw-bold"><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+                </div>
+                <a href="../logout.php" class="btn btn-danger mx-3">Log out</a>
+
+            </div>
+        </div>
+    </nav>
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><?= isset($_GET['filter']) && $_GET['filter'] === 'admins' ? 'All Admins' : 'All Users' ?></h2>
@@ -175,13 +266,13 @@ $myusers = mysqli_query($connection, $sql);
                         <td><?= htmlspecialchars($users['name']) ?></td>
                         <td>
                             <img 
-                                src="../Uploads/<?= htmlspecialchars($users['profile_image']) ?>" 
+                                src="../resources/uploads/<?= htmlspecialchars($users['profile_image']) ?>" 
                                 width="100" height="100" 
                                 class="user-img"
                                 alt="User Image"
-                                onerror="this.src='https://via.placeholder.com/100?text=No+Image'"
                             >
                         </td>
+
                         <td>
                             <span class="badge rounded-pill 
                                 <?= $users['role'] === 'admin' ? 'bg-primary' : 'bg-secondary' ?>">

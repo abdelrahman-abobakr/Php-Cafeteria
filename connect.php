@@ -1,13 +1,12 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "Cafeteria";
-$port = 3307;
+    $serverName = "localhost";
+    $username = "root";
+    $pass = "";
+    $databaseName = "cafeteria";
 
-$myconnection = mysqli_connect($servername, $username, $password, $dbname, $port);
+    $connection = mysqli_connect($serverName, $username, $pass,$databaseName);
 
-if (!$myconnection) {
-    die("Connection failed: " . mysqli_connect_error());
-}
+    if (!$connection) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
 ?>

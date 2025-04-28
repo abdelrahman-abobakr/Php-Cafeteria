@@ -6,7 +6,7 @@
         exit();
     }
 
-
+    $rooms = ["Room 101", "Room 102", "Room 103", "Room 104"];
     // Initialize cart if not exists
     if (!isset($_SESSION['cart'])) {
         $_SESSION['cart'] = [];
@@ -176,17 +176,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* .user-box {
-            position: absolute;
-            top: 30px;
-            right: 20px;
-            text-align: center;
-        } */
         .user-box img {
             width: 100px;
             height: 100px;
             object-fit: cover;
-            /* border: 2px solid #0d6efd; */
         }
         .user-box p {
             margin-top: 10px;
@@ -260,7 +253,7 @@
                 <!-- Cart Sidebar -->
                 <div class="col-md-3">
                     <div class="card sticky-top" style="top: 20px;">
-                        <div class="card-header text-white" style="background-color: rgb(145, 125, 121)">
+                        <div class="card-header text-white" style="background-color: rgb(151, 112, 82)">
                             <h5 class="mb-0">Your Order</h5>
                         </div>
                         <div class="card-body">
@@ -268,8 +261,12 @@
                             <form method="POST" class="mb-3">
                                 <div class="mb-3">
                                     <label for="room" class="form-label">Room Number</label>
-                                    <input type="text" name="room" id="room" class="form-control" 
-                                        value="<?= htmlspecialchars($_SESSION['room']) ?>" required>
+                                    <select name="room" class="form-select">
+                                        <option selected disabled>Select Room</option>
+                                        <?php foreach ($rooms as $room):?>
+                                            <option class="form-option" value="<?= $room ?>"><?= $room ?></option>
+                                        <?php endforeach?>
+                                    </select>
                                 </div>
                                 <button type="submit" name="set_room" class="btn btn-sm btn-outline-dark w-100">
                                     Set Room
@@ -341,7 +338,7 @@
                         <div class="row g-3">
                             <?php foreach($products as $product): ?>
                                 <div class="col-12 col-sm-6 col-md-4 col-lg-4 mb-4">
-                                    <div class="card h-100 p-2 " style="background-color:rgb(238, 220, 216)">
+                                    <div class="card h-100 p-2 " style="background-color:rgb(255, 255, 255)">
                                         <img src="<?= str_replace('../', './', $product['image_path']) ?>" 
                                             class="card-img-top object-fit-cover" 
                                             alt="<?= $product['name']?>"
@@ -358,7 +355,7 @@
                                                         overflow: hidden;">
                                                     <?= $product['description']?>
                                                 </p>
-                                                <span class="badge"  style="background-color:rgb(120, 114, 113)"><?= "$".$product['price']?></span><br>
+                                                <span class="badge bg-warning text-dark"  style="-color:rgb(223, 214, 213)"><?= "$".$product['price']?></span><br>
                                                 <span class="badge bg-<?= $product['is_active']? 'success':'danger'?>"  style="background-color:rgb(120, 114, 113)"><?= $product['is_active']? 'Available':'Not Available'?></span>
                                             </div>
                                            
@@ -367,8 +364,8 @@
                                             <form method="POST">
                                                 <input type="hidden" name="product_id" value="<?= $product['product_id'] ?>">
                                                 <div class="input-group">
-                                                    <input type="number" name="quantity" value="1" min="1" class="form-control" style="background-color:rgb(226, 185, 177)">
-                                                    <button type="submit" name="add_to_cart" class="btn text-white rounded rounded-1" style="background-color:rgb(145, 125, 121)" <?= $product['is_active']? '':'disabled'?>>
+                                                    <input type="number" name="quantity" value="1" min="1" class="form-control" style="background-color:rgb(243, 235, 234)">
+                                                    <button type="submit" name="add_to_cart" class="btn text-white rounded rounded-1" style="background-color: rgb(151, 112, 82)" <?= $product['is_active']? '':'disabled'?>>
                                                         Add to Cart
                                                     </button>
                                                 </div>

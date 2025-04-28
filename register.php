@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // If no errors, proceed to save user
     if (empty($errors)) {
         // Save image
-        $upload_dir = 'uploads/';
+        $upload_dir = 'resources/uploads';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
         $img_name = time() . "_" . basename($fileName);
         $target_path = $upload_dir . $img_name;

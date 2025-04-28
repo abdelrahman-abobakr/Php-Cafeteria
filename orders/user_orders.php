@@ -2,12 +2,6 @@
 session_start();
 include_once("../Connection.php");
 
-// Make sure user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
-    exit();
-}
-
 // Get user_id from URL
 $user_id = isset($_GET['user_id']) ? intval($_GET['user_id']) : 0;
 

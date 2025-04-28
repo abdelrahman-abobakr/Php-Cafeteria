@@ -3,7 +3,7 @@ $servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "Cafeteria";
-$port = 8111;
+$port = 3307;
 
 $connection = mysqli_connect($servername, $username, $password, $dbname, $port);
 

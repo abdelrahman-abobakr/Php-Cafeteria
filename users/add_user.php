@@ -1,4 +1,10 @@
 <?php
+session_start();
+if($_SESSION['user_role']!="admin")
+{
+    header("Location: ../unauth.php"); 
+    exit();
+}
 include_once "../connect.php";
 $errors = [];
 $values = ['name' => '', 'email' => '', 'role' => 'user'];
@@ -40,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // التحقق من وجود الإيميل في قاعدة البيانات
     if (empty($errors)) {
-        $stmt = mysqli_prepare($myconnection, "SELECT user_id FROM users WHERE email = ?");
+        $stmt = mysqli_prepare($connection, "SELECT user_id FROM users WHERE email = ?");
         if ($stmt) {
             mysqli_stmt_bind_param($stmt, "s", $email);
             mysqli_stmt_execute($stmt);
@@ -67,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         // إدخال المستخدم الجديد إلى قاعدة البيانات
-        $stmt = mysqli_prepare($myconnection, "INSERT INTO users (name, email, password, role, profile_image) VALUES (?, ?, ?, ?, ?)");
+        $stmt = mysqli_prepare($connection, "INSERT INTO users (name, email, password, role, profile_image) VALUES (?, ?, ?, ?, ?)");
         if ($stmt) {
             mysqli_stmt_bind_param($stmt, "sssss", $name, $email, $hashed_password, $role, $img_name);
             if (mysqli_stmt_execute($stmt)) {
@@ -75,11 +81,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: users.php");
                 exit();
             } else {
-                $errors['database'] = "Database insert error: " . mysqli_error($myconnection);
+                $errors['database'] = "Database insert error: " . mysqli_error($connection);
             }
             mysqli_stmt_close($stmt);
         } else {
-            $errors['database'] = "Database insert error: " . mysqli_error($myconnection);
+            $errors['database'] = "Database insert error: " . mysqli_error($connection);
         }
     }
 }

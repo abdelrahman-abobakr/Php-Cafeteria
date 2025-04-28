@@ -1,5 +1,10 @@
 <?php
 session_start();
+if($_SESSION['user_role']!="admin")
+{
+    header("Location: ../unauth.php"); 
+    exit();
+}
 include_once("../Connection.php");
 
 // Make sure user is logged in

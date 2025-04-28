@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Check if email already exists in the database
     if (empty($errors)) {
         $sql = "SELECT * FROM users WHERE email = ?";
-        if ($stmt = mysqli_prepare($myconnection, $sql)) {
+        if ($stmt = mysqli_prepare($connection, $sql)) {
             mysqli_stmt_bind_param($stmt, "s", $email);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
@@ -59,15 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
         // Insert into database
-        if ($myconnection) {
+        if ($connection) {
             $sql = "INSERT INTO users (name, email, password, profile_image) 
                     VALUES ('$name', '$email', '$hashed_password', '$img_name')";
 
-            if (mysqli_query($myconnection, $sql)) {
+            if (mysqli_query($connection, $sql)) {
                 header("Location: login.php");
                 exit();
             } else {
-                echo "Database error: " . mysqli_error($myconnection);
+                echo "Database error: " . mysqli_error($connection);
             }
         } else {
             echo "Database connection failed!";

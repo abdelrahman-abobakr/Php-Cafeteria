@@ -1,4 +1,10 @@
 <?php
+session_start();
+if($_SESSION['user_role']!="admin")
+{
+    header("Location: ../unauth.php"); 
+    exit();
+}
     include_once("../Connection.php");
     $id = $_GET['id'];
 

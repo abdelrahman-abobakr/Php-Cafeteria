@@ -24,12 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
         $query = "SELECT * FROM users WHERE email = '$email'";
-        $result = mysqli_query($myconnection, $query);
+        $result = mysqli_query($connection, $query);
 
         if ($result && mysqli_num_rows($result) > 0) {
             $hashed = password_hash($new_password, PASSWORD_DEFAULT);
             $update = "UPDATE users SET password = '$hashed' WHERE email = '$email'";
-            if (mysqli_query($myconnection, $update)) {
+            if (mysqli_query($connection, $update)) {
                 $success = "Password has been updated successfully. <a href='login.php' class='text-decoration-underline'>Login now</a>";
             } else {
                 $errors['database'] = "Failed to update password. Please try again.";

@@ -1,9 +1,15 @@
 <?php 
+session_start();
+if($_SESSION['user_role']!="admin")
+{
+    header("Location: ../unauth.php"); 
+    exit();
+}
 $id = $_GET["userid"]; 
 include_once "../connect.php"; 
 
 $sql = "SELECT * FROM users WHERE user_id = $id";
-$user = mysqli_query($myconnection, $sql); 
+$user = mysqli_query($connection, $sql); 
 $myuser = mysqli_fetch_assoc($user);
 
 $errors = [];
@@ -33,7 +39,7 @@ if (isset($_POST["btn"])) {
         $update_password = !empty($password) ? ", password='" . password_hash($password, PASSWORD_DEFAULT) . "'" : "";
 
         $sql = "UPDATE users SET name='$name', email='$email', profile_image='$image_name' $update_password WHERE user_id=$id";
-        mysqli_query($myconnection, $sql); 
+        mysqli_query($connection, $sql); 
         header("location: users.php"); 
         exit;
     }

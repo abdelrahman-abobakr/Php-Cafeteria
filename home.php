@@ -341,7 +341,7 @@
                         <div class="row g-3">
                             <?php foreach($products as $product): ?>
                                 <div class="col-12 col-sm-6 col-md-4 col-lg-4 mb-4">
-                                    <div class="card h-100 p-1 " style="background-color:rgb(251, 216, 210)">
+                                    <div class="card h-100 p-2 " style="background-color:rgb(238, 220, 216)">
                                         <img src="<?= str_replace('../', './', $product['image_path']) ?>" 
                                             class="card-img-top object-fit-cover" 
                                             alt="<?= $product['name']?>"

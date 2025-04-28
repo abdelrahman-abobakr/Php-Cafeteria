@@ -1,38 +1,38 @@
 <?php
-session_start();
+    session_start();
 
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-// Initialize cart if not exists
-if (!isset($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
-    $_SESSION['room'] = '';
-}
-
-$user_id = $_SESSION['user_id'];
-$user_name = $_SESSION['user_name'];
-$user_email = $_SESSION['user_email'];
-
-require_once 'connect.php';
-
-if (!isset($user_id) || empty($user_id)) {
-    die('No user ID found in session');
-}
-
-$query = "SELECT * FROM users WHERE user_id = '$user_id' LIMIT 1";
-$result = mysqli_query($connection, $query);
-
-if (!$result) {
-    die('Query Error: ' . mysqli_error($connection));
-}
-
-$user = mysqli_fetch_assoc($result);
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: login.php");
+        exit();
+    }
 
 
-$categories=[];
+    // Initialize cart if not exists
+    if (!isset($_SESSION['cart'])) {
+        $_SESSION['cart'] = [];
+        $_SESSION['room'] = '';
+    }
+
+    $user_id = $_SESSION['user_id'];
+    $user_name = $_SESSION['user_name'];
+    $user_email = $_SESSION['user_email'];
+    require_once 'connect.php';
+
+    if (!isset($user_id) || empty($user_id)) {
+        die('No user ID found in session');
+    }
+
+    $query = "SELECT * FROM users WHERE user_id = '$user_id' LIMIT 1";
+    $result = mysqli_query($connection, $query);
+
+    if (!$result) {
+        die('Query Error: ' . mysqli_error($connection));
+    }
+
+    $user = mysqli_fetch_assoc($result);
+
+
+    $categories=[];
     $products=[];
     
     // pagination variables
@@ -64,81 +64,108 @@ $categories=[];
 
 
     // Handle adding to cart
-if (isset($_POST['add_to_cart'])) {
-    $product_id = intval($_POST['product_id']);
-    $quantity = intval($_POST['quantity'] ?? 1);
-    
-    // Get product details
-    $product_query = "SELECT * FROM products WHERE product_id = $product_id";
-    $product_result = mysqli_query($connection, $product_query);
-    $product = mysqli_fetch_assoc($product_result);
-    
-    if ($product) {
+    if (isset($_POST['add_to_cart'])) {
+        $product_id = intval($_POST['product_id']);
+        $quantity = intval($_POST['quantity'] ?? 1);
+        
+        // Get product details
+        $product_query = "SELECT * FROM products WHERE product_id = $product_id";
+        $product_result = mysqli_query($connection, $product_query);
+        $product = mysqli_fetch_assoc($product_result);
+        
+        if ($product) {
+            if (isset($_SESSION['cart'][$product_id])) {
+                $_SESSION['cart'][$product_id]['quantity'] += $quantity;
+            } else {
+                $_SESSION['cart'][$product_id] = [
+                    'name' => $product['name'],
+                    'price' => $product['price'],
+                    'quantity' => $quantity,
+                    'image' => $product['image_path']
+                ];
+            }
+        }
+    }
+
+    // Handle removing from cart
+    if (isset($_GET['remove_from_cart'])) {
+        $product_id = intval($_GET['remove_from_cart']);
         if (isset($_SESSION['cart'][$product_id])) {
-            $_SESSION['cart'][$product_id]['quantity'] += $quantity;
-        } else {
-            $_SESSION['cart'][$product_id] = [
-                'name' => $product['name'],
-                'price' => $product['price'],
-                'quantity' => $quantity,
-                'image' => $product['image_path']
-            ];
+            unset($_SESSION['cart'][$product_id]);
         }
     }
-}
 
-// Handle removing from cart
-if (isset($_GET['remove_from_cart'])) {
-    $product_id = intval($_GET['remove_from_cart']);
-    if (isset($_SESSION['cart'][$product_id])) {
-        unset($_SESSION['cart'][$product_id]);
+    // Handle quantity updates
+    if (isset($_POST['update_quantity'])) {
+        $product_id = intval($_POST['product_id']);
+        $quantity = intval($_POST['quantity']);
+        
+        if ($quantity > 0 && isset($_SESSION['cart'][$product_id])) {
+            $_SESSION['cart'][$product_id]['quantity'] = $quantity;
+        }
     }
-}
 
-// Handle quantity updates
-if (isset($_POST['update_quantity'])) {
-    $product_id = intval($_POST['product_id']);
-    $quantity = intval($_POST['quantity']);
+    // Handle room selection
+    if (isset($_POST['set_room'])) {
+        $_SESSION['room'] = mysqli_real_escape_string($connection, $_POST['room']);
+    }
     
-    if ($quantity > 0 && isset($_SESSION['cart'][$product_id])) {
-        $_SESSION['cart'][$product_id]['quantity'] = $quantity;
-    }
-}
-
-// Handle room selection
-if (isset($_POST['set_room'])) {
-    $_SESSION['room'] = mysqli_real_escape_string($connection, $_POST['room']);
-}
-
-// Handle order submission
-if (isset($_POST['place_order'])) {
-    if (!empty($_SESSION['cart']) && !empty($_SESSION['room'])) {
-        // Calculate total
-        $total = 0;
-        foreach ($_SESSION['cart'] as $item) {
-            $total += $item['price'] * $item['quantity'];
+    // Handle order submission
+    if (isset($_POST['place_order'])) {
+        if (!empty($_SESSION['cart']) && !empty($_SESSION['room'])) {
+            // Calculate total
+            $total = 0;
+            foreach ($_SESSION['cart'] as $item) {
+                $total += $item['price'] * $item['quantity'];
+            }
+            $notes = isset($_POST['order_notes']) && !empty(trim($_POST['order_notes'])) ? "'" . mysqli_real_escape_string($connection, trim($_POST['order_notes'])) . "'" : "NULL";
+            // Create order
+            $order_query = "INSERT INTO orders (user_id, room, total_amount, notes) 
+                        VALUES ($user_id, '{$_SESSION['room']}', $total, $notes)";
+            mysqli_query($connection, $order_query);
+            $order_id = mysqli_insert_id($connection);
+            
+            // Add order items
+            foreach ($_SESSION['cart'] as $product_id => $item) {
+                $item_query = "INSERT INTO order_items (order_id, product_id, quantity, price)
+                            VALUES ($order_id, $product_id, {$item['quantity']}, {$item['price']})";
+                mysqli_query($connection, $item_query);
+            }
+            
+            // Clear cart
+            $_SESSION['cart'] = [];
+            $_SESSION['order_success'] = "Order placed successfully!";
+            header("Location: home.php");
+            exit();
         }
-        
-        // Create order
-        $order_query = "INSERT INTO orders (user_id, room, total_amount) 
-                       VALUES ($user_id, '{$_SESSION['room']}', $total)";
-        mysqli_query($connection, $order_query);
-        $order_id = mysqli_insert_id($connection);
-        
-        // Add order items
-        foreach ($_SESSION['cart'] as $product_id => $item) {
-            $item_query = "INSERT INTO order_items (order_id, product_id, quantity, price)
-                          VALUES ($order_id, $product_id, {$item['quantity']}, {$item['price']})";
-            mysqli_query($connection, $item_query);
-        }
-        
-        // Clear cart
-        $_SESSION['cart'] = [];
-        $_SESSION['order_success'] = "Order placed successfully!";
-        header("Location: home.php");
-        exit();
     }
-}
+
+    if (isset($_POST['searchBtn']) && isset($_POST['searchName'])){
+
+        $search_term = trim($_POST['searchName']);
+
+        $search_query = "SELECT * FROM products WHERE deleted_at IS NULL AND LOWER(name) LIKE LOWER('%$search_term%') LIMIT $items_per_page OFFSET $offset";
+        $result = mysqli_query($connection, $search_query);
+        $products=[];
+        while($prod = mysqli_fetch_assoc($result)) {
+            $products[] = $prod;
+        }
+    }
+    if (isset($_POST['searchCategoryBtn']) && isset($_POST['categorySearch'])){
+
+        $search_term = trim($_POST['categorySearch']);
+
+        $search_query = "SELECT p.* FROM products p JOIN categories c ON p.category_id = c.category_id 
+                         WHERE deleted_at IS NULL AND LOWER(c.name) LIKE LOWER('%$search_term%')
+                         LIMIT $items_per_page OFFSET $offset";
+        $result = mysqli_query($connection, $search_query);
+        $products=[];
+        while($prod = mysqli_fetch_assoc($result)) {
+            $products[] = $prod;
+        }
+    }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -149,17 +176,17 @@ if (isset($_POST['place_order'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .user-box {
+        /* .user-box {
             position: absolute;
             top: 30px;
             right: 20px;
             text-align: center;
-        }
+        } */
         .user-box img {
             width: 100px;
             height: 100px;
             object-fit: cover;
-            border: 2px solid #0d6efd;
+            /* border: 2px solid #0d6efd; */
         }
         .user-box p {
             margin-top: 10px;
@@ -185,9 +212,9 @@ if (isset($_POST['place_order'])) {
 <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="home.php">Coffe Drink</a>
+            <a class="navbar-brand" href="home.php">Coffee Drink</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+                <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
@@ -198,18 +225,26 @@ if (isset($_POST['place_order'])) {
                         <a class="nav-link" href="orders.php">Orders</a>
                     </li>                   
                 </ul>
-                <form class="d-flex" role="search">
-                    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-outline-success" type="submit">Search</button>
+                <form method="POST" class="d-flex me-3" role="search">
+                    <input class="form-control me-2" type="text" placeholder="product" name="searchName">
+                    <button class="btn btn-outline-success" name="searchBtn" type="submit">Search</button>
                 </form>
+                <form method="POST" class="d-flex me-3" role="search">
+                    <input class="form-control me-2" type="text" placeholder="category" name="categorySearch">
+                    <button class="btn btn-outline-success" name="searchCategoryBtn" type="submit">Search</button>
+                </form>
+                <div class="user-box d-flex align-items-center">
+                    <img src="uploads/<?= htmlspecialchars($user['profile_image'] ?? 'default.jpg') ?>" 
+                        class="rounded-circle border border-secondary" 
+                        style="width: 40px; height: 40px; object-fit: cover;" 
+                        alt="User Photo">
+                    <span class="ms-2 fw-bold"><?= htmlspecialchars($user_name) ?></span>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="user-box">
-        <img src="uploads/<?= htmlspecialchars($user['profile_image'] ?? 'default.jpg') ?>" alt="User Photo">
-        <p><?= htmlspecialchars($user_name) ?></p>
-    </div>
+    
     <div class="container p-4">
         
         <div class="container-wrapper p-4">
@@ -225,7 +260,7 @@ if (isset($_POST['place_order'])) {
                 <!-- Cart Sidebar -->
                 <div class="col-md-3">
                     <div class="card sticky-top" style="top: 20px;">
-                        <div class="card-header text-white" style="background-color: #944639">
+                        <div class="card-header text-white" style="background-color: rgb(145, 125, 121)">
                             <h5 class="mb-0">Your Order</h5>
                         </div>
                         <div class="card-body">
@@ -236,7 +271,7 @@ if (isset($_POST['place_order'])) {
                                     <input type="text" name="room" id="room" class="form-control" 
                                         value="<?= htmlspecialchars($_SESSION['room']) ?>" required>
                                 </div>
-                                <button type="submit" name="set_room" class="btn btn-sm btn-primary w-100">
+                                <button type="submit" name="set_room" class="btn btn-sm btn-outline-dark w-100">
                                     Set Room
                                 </button>
                             </form>
@@ -279,6 +314,10 @@ if (isset($_POST['place_order'])) {
                                             }, 0), 2) ?></span>
                                         </div>
                                         <form method="POST">
+                                            <div class="form-floating my-3">
+                                                <textarea class="form-control" id="order-notes" name="order_notes" style="height: 100px"></textarea>
+                                                <label for="order-notes">Notes</label>
+                                            </div>
                                             <button type="submit" name="place_order" class="btn btn-success w-100 mt-2"
                                                     <?= empty($_SESSION['room']) ? 'disabled' : '' ?>>
                                                 Confirm Order
@@ -319,7 +358,8 @@ if (isset($_POST['place_order'])) {
                                                         overflow: hidden;">
                                                     <?= $product['description']?>
                                                 </p>
-                                                <span class="badge text-bg-warning"><?= "$".$product['price']?></span>
+                                                <span class="badge"  style="background-color:rgb(120, 114, 113)"><?= "$".$product['price']?></span><br>
+                                                <span class="badge bg-<?= $product['is_active']? 'success':'danger'?>"  style="background-color:rgb(120, 114, 113)"><?= $product['is_active']? 'Available':'Not Available'?></span>
                                             </div>
                                            
                                         </div>
@@ -328,7 +368,7 @@ if (isset($_POST['place_order'])) {
                                                 <input type="hidden" name="product_id" value="<?= $product['product_id'] ?>">
                                                 <div class="input-group">
                                                     <input type="number" name="quantity" value="1" min="1" class="form-control" style="background-color:rgb(226, 185, 177)">
-                                                    <button type="submit" name="add_to_cart" class="btn btn-warning rounded rounded-1" style="background-color: #944639">
+                                                    <button type="submit" name="add_to_cart" class="btn text-white rounded rounded-1" style="background-color:rgb(145, 125, 121)" <?= $product['is_active']? '':'disabled'?>>
                                                         Add to Cart
                                                     </button>
                                                 </div>

@@ -34,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_order'])) {
     $total_amount = floatval($_POST['total_amount']);
 
     // Insert into orders
-    $order_query = "INSERT INTO orders (user_id, room, total_amount, notes, created_at) 
-                    VALUES ('$user_id', '$room', '$total_amount', '$notes', NOW())";
+    $order_query = "INSERT INTO orders (user_id, room, total_amount, notes, created_at, status) 
+                    VALUES ('$user_id', '$room', '$total_amount', '$notes', NOW(), 'processing')";
     mysqli_query($connection, $order_query);
     $order_id = mysqli_insert_id($connection);
 
@@ -50,6 +50,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_order'])) {
         }
     }
 
+    header("Location: orders.php");
+    exit();
+}
+
+// Handle status update
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
+    $order_id = intval($_POST['order_id']);
+    $status = mysqli_real_escape_string($connection, $_POST['status']);
+    
+    $update_query = "UPDATE orders SET status = '$status' WHERE order_id = '$order_id'";
+    mysqli_query($connection, $update_query);
+    
     header("Location: orders.php");
     exit();
 }
@@ -84,6 +96,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_order'])) {
         }
         .order-table th {
             background-color: #f8f9fa;
+        }
+        .status-form {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-form select {
+            width: 150px;
+        }
+        .status-form button {
+            white-space: nowrap;
+        }
+        .badge-processing {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .badge-out_for_delivery {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+        .badge-done {
+            background-color: #198754;
+            color: #fff;
+        }
+        .badge-cancelled {
+            background-color: #dc3545;
+            color: #fff;
         }
     </style>
 </head>
@@ -187,26 +226,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['confirm_order'])) {
                             <th>Status</th>
                             <th>Notes</th>
                             <th>Date</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php while($order = mysqli_fetch_assoc($orders_result)): ?>
+                        <?php 
+                        // Reset orders result pointer
+                        mysqli_data_seek($orders_result, 0);
+                        while($order = mysqli_fetch_assoc($orders_result)): ?>
                             <tr>
                                 <td><?= $order['order_id'] ?></td>
                                 <td><?= htmlspecialchars($order['user_name']) ?></td>
                                 <td><?= htmlspecialchars($order['room']) ?></td>
                                 <td>EGP <?= number_format($order['total_amount'], 2) ?></td>
                                 <td>
-                                    <span class="badge bg-<?= 
-                                        $order['status'] == 'processing' ? 'warning' : 
-                                        ($order['status'] == 'out_for_delivery' ? 'primary' : 
-                                        ($order['status'] == 'done' ? 'success' : 'danger'))
-                                    ?>">
-                                        <?= ucfirst($order['status']) ?>
-                                    </span>
+                                    <form method="POST" class="status-form">
+                                        <input type="hidden" name="order_id" value="<?= $order['order_id'] ?>">
+                                        <select name="status" class="form-select form-select-sm">
+                                            <option value="processing" <?= $order['status'] == 'processing' ? 'selected' : '' ?>>Processing</option>
+                                            <option value="out_for_delivery" <?= $order['status'] == 'out_for_delivery' ? 'selected' : '' ?>>Out for Delivery</option>
+                                            <option value="done" <?= $order['status'] == 'done' ? 'selected' : '' ?>>Done</option>
+                                            <option value="cancelled" <?= $order['status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                                        </select>
+                                        <button type="submit" name="update_status" class="btn btn-sm btn-success">Save</button>
+                                    </form>
                                 </td>
                                 <td><?= !empty($order['notes']) ? htmlspecialchars($order['notes']) : '—' ?></td>
                                 <td><?= date('M j, Y g:i A', strtotime($order['created_at'])) ?></td>
+                                <td>
+    <a href="user_orders.php?user_id=<?= $order['user_id'] ?>" class="btn btn-sm btn-info">View</a>
+</td>
                             </tr>
                         <?php endwhile; ?>
                     </tbody>

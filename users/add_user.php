@@ -1,23 +1,28 @@
 <?php
-include_once "connect.php";
+include_once "../connect.php";
 $errors = [];
-$values = ['name' => '', 'email' => ''];
+$values = ['name' => '', 'email' => '', 'role' => 'user'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // استلام القيم من النموذج
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
+    $role = $_POST['role'] ?? 'user';
     $profile_picture = $_FILES['profile_picture'] ?? null;
 
+    // تعيين القيم المدخلة لكي تبقى عند ظهور الأخطاء
     $values['name'] = $name;
     $values['email'] = $email;
+    $values['role'] = $role;
 
-    // Validation
+    // التحقق من الأخطاء
     if ($name === '') $errors['name'] = "Name is required.";
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = "Invalid email.";
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors['email'] = "Invalid email format.";
     if (strlen($password) < 6) $errors['password'] = "Password must be at least 6 characters.";
     if ($password !== $confirm_password) $errors['confirm_password'] = "Passwords do not match.";
+    if ($role !== 'admin' && $role !== 'user') $errors['role'] = "Invalid role selected.";
 
     if (!$profile_picture || $profile_picture['error'] != 0) {
         $errors['profile_picture'] = "Profile picture is required.";
@@ -26,31 +31,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $filePath = $profile_picture["tmp_name"];
         $fileArray = explode(".", $fileName);
         $ext = strtolower(end($fileArray));
-        $allowed = ["png", "jpg", "jpeg", "gif", "svg"];
+        $allowed = ["png", "jpg", "jpeg", "gif", "svg", "jfif"];
 
         if (!in_array($ext, $allowed)) {
-            $errors['profile_picture'] = "Only image files (png, jpg, jpeg, gif, svg) are allowed.";
+            $errors['profile_picture'] = "Only image files (png, jpg, jpeg, gif, svg, jfif) are allowed.";
         }
     }
 
-    // Check if email already exists in the database
+    // التحقق من وجود الإيميل في قاعدة البيانات
     if (empty($errors)) {
-        $sql = "SELECT * FROM users WHERE email = ?";
-        if ($stmt = mysqli_prepare($myconnection, $sql)) {
+        $stmt = mysqli_prepare($myconnection, "SELECT user_id FROM users WHERE email = ?");
+        if ($stmt) {
             mysqli_stmt_bind_param($stmt, "s", $email);
             mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            if (mysqli_num_rows($result) > 0) {
-                $errors['email'] = "This email is already registered.";
+            mysqli_stmt_store_result($stmt);
+
+            if (mysqli_stmt_num_rows($stmt) > 0) {
+                $errors['email'] = "Email already exists.";
             }
             mysqli_stmt_close($stmt);
+        } else {
+            $errors['database'] = "Database error during email check.";
         }
     }
 
-    // If no errors, proceed to save user
+    // إذا لا يوجد أخطاء، نقوم بإضافة المستخدم إلى قاعدة البيانات
     if (empty($errors)) {
-        // Save image
-        $upload_dir = 'uploads/';
+        // حفظ الصورة
+        $upload_dir = dirname(__DIR__) . '/uploads/';
         if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
         $img_name = time() . "_" . basename($fileName);
         $target_path = $upload_dir . $img_name;
@@ -58,19 +66,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-        // Insert into database
-        if ($myconnection) {
-            $sql = "INSERT INTO users (name, email, password, profile_image) 
-                    VALUES ('$name', '$email', '$hashed_password', '$img_name')";
-
-            if (mysqli_query($myconnection, $sql)) {
-                header("Location: login.php");
+        // إدخال المستخدم الجديد إلى قاعدة البيانات
+        $stmt = mysqli_prepare($myconnection, "INSERT INTO users (name, email, password, role, profile_image) VALUES (?, ?, ?, ?, ?)");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "sssss", $name, $email, $hashed_password, $role, $img_name);
+            if (mysqli_stmt_execute($stmt)) {
+                // إعادة التوجيه بعد النجاح
+                header("Location: users.php");
                 exit();
             } else {
-                echo "Database error: " . mysqli_error($myconnection);
+                $errors['database'] = "Database insert error: " . mysqli_error($myconnection);
             }
+            mysqli_stmt_close($stmt);
         } else {
-            echo "Database connection failed!";
+            $errors['database'] = "Database insert error: " . mysqli_error($myconnection);
         }
     }
 }
@@ -81,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Form</title>
+    <title>Add User</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -107,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             max-width: 600px;
             border: 1px solid #e0d6c2;
         }
-        h2 {
+        h3 {
             font-weight: 600;
             color: #8b6b4a;
             text-align: center;
@@ -118,14 +127,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #6b5a4a;
             margin-bottom: 8px;
         }
-        .form-control {
+        .form-control, .form-select {
             background-color: #fff;
             border: 1px solid #d3c8b8;
             border-radius: 8px;
             padding: 12px 15px;
-            margin-bottom: 5px;
         }
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             border-color: #a78b6f;
             box-shadow: 0 0 0 0.25rem rgba(167, 139, 111, 0.25);
         }
@@ -138,7 +146,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .invalid-feedback {
             color: #c08b7e;
             font-size: 14px;
-            margin-bottom: 15px;
         }
         .btn {
             border-radius: 8px;
@@ -167,19 +174,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             justify-content: center;
             margin-top: 25px;
         }
-        .login-link {
-            text-align: center;
-            margin-top: 20px;
-            color: #8d6e63;
-        }
-        .login-link a {
-            color: #6d4c41;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .login-link a:hover {
-            text-decoration: underline;
-        }
         @media (max-width: 768px) {
             body {
                 padding: 20px;
@@ -192,65 +186,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <div class="form-container">
-    <h2>Create Your Account</h2>
+    <h3>Add New User</h3>
     <form method="post" enctype="multipart/form-data" novalidate>
         <!-- Name -->
         <div class="mb-3">
             <label class="form-label">Full Name</label>
-            <input type="text" id="name" name="name" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" 
-                   value="<?= htmlspecialchars($values['name']) ?>" oninput="clearError('name')">
-            <div class="invalid-feedback" id="name-error"><?= $errors['name'] ?? '' ?></div>
+            <input type="text" name="name" class="form-control <?= isset($errors['name']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($values['name']) ?>" oninput="clearError('name')">
+            <div class="invalid-feedback"><?= $errors['name'] ?? '' ?></div>
         </div>
 
         <!-- Email -->
         <div class="mb-3">
-            <label class="form-label">Email Address</label>
-            <input type="email" id="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" 
-                   value="<?= htmlspecialchars($values['email']) ?>" oninput="clearError('email')">
-            <div class="invalid-feedback" id="email-error"><?= $errors['email'] ?? '' ?></div>
+            <label class="form-label">Email address</label>
+            <input type="email" name="email" class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" value="<?= htmlspecialchars($values['email']) ?>" oninput="clearError('email')">
+            <div class="invalid-feedback"><?= $errors['email'] ?? '' ?></div>
         </div>
 
         <!-- Password -->
         <div class="mb-3">
             <label class="form-label">Password</label>
-            <input type="password" id="password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" 
-                   oninput="clearError('password')">
-            <div class="invalid-feedback" id="password-error"><?= $errors['password'] ?? '' ?></div>
+            <input type="password" name="password" class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" oninput="clearError('password')">
+            <div class="invalid-feedback"><?= $errors['password'] ?? '' ?></div>
         </div>
 
         <!-- Confirm Password -->
         <div class="mb-3">
             <label class="form-label">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" 
-                   oninput="clearError('confirm_password')">
-            <div class="invalid-feedback" id="confirm_password-error"><?= $errors['confirm_password'] ?? '' ?></div>
+            <input type="password" name="confirm_password" class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" oninput="clearError('confirm_password')">
+            <div class="invalid-feedback"><?= $errors['confirm_password'] ?? '' ?></div>
+        </div>
+
+        <!-- Role -->
+        <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select <?= isset($errors['role']) ? 'is-invalid' : '' ?>" oninput="clearError('role')">
+                <option value="user" <?= $values['role'] === 'user' ? 'selected' : '' ?>>User</option>
+                <option value="admin" <?= $values['role'] === 'admin' ? 'selected' : '' ?>>Admin</option>
+            </select>
+            <div class="invalid-feedback"><?= $errors['role'] ?? '' ?></div>
         </div>
 
         <!-- Profile Picture -->
         <div class="mb-4">
             <label class="form-label">Profile Picture</label>
-            <input type="file" id="profile_picture" name="profile_picture" class="form-control <?= isset($errors['profile_picture']) ? 'is-invalid' : '' ?>" 
-                   oninput="clearError('profile_picture')">
-            <div class="invalid-feedback" id="profile_picture-error"><?= $errors['profile_picture'] ?? '' ?></div>
+            <input type="file" name="profile_picture" class="form-control <?= isset($errors['profile_picture']) ? 'is-invalid' : '' ?>" oninput="clearError('profile_picture')">
+            <div class="invalid-feedback"><?= $errors['profile_picture'] ?? '' ?></div>
         </div>
-        
+
+        <!-- Buttons -->
         <div class="btn-group">
-            <button type="submit" class="btn btn-primary">Register</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
             <button type="reset" class="btn btn-secondary">Reset</button>
-        </div>
-        
-        <div class="login-link">
-            <p>Already have an account? <a href="login.php">Login here</a></p>
         </div>
     </form>
 </div>
 
 <script>
     function clearError(field) {
-        const inputField = document.getElementById(field);
-        const errorMessage = document.getElementById(field + "-error");
-        inputField.classList.remove('is-invalid');
-        errorMessage.textContent = '';
+        const fieldElement = document.querySelector(`[name=${field}]`);
+        if (fieldElement.classList.contains('is-invalid')) {
+            fieldElement.classList.remove('is-invalid');
+        }
+        const feedback = fieldElement.nextElementSibling;
+        if (feedback && feedback.classList.contains('invalid-feedback')) {
+            feedback.textContent = '';
+        }
     }
 </script>
 

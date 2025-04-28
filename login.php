@@ -31,6 +31,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_role'] = $user['role'];
+                if ( $_SESSION['user_role'] =="admin")
+                {
+                    header("Location: Products/products.php"); 
+                    exit();
+
+                }
                 header("Location: home.php"); 
                 exit();
             } else {

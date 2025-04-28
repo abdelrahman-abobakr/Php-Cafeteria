@@ -1,4 +1,10 @@
 <?php 
+session_start();
+if($_SESSION['user_role']!="admin")
+{
+    header("Location: ../unauth.php"); 
+    exit();
+}
 include_once "../connect.php"; 
 
 // التحقق هل تم طلب عرض الـ Admins فقط؟
@@ -8,7 +14,7 @@ if (isset($_GET['filter']) && $_GET['filter'] === 'admins') {
     $sql = "SELECT * FROM users"; 
 }
 
-$myusers = mysqli_query($myconnection, $sql); 
+$myusers = mysqli_query($connection, $sql); 
 ?>
 
 <!DOCTYPE html>

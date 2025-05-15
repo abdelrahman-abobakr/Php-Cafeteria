@@ -225,7 +225,7 @@
     
     <div class="container-wrapper w-75">
         <div class="container">
-            <h1 class="text-center mt-2 " style="color:#944639">Add Product</h1>
+            <h1 class="text-center mt-2 " style="color:#944639">Update Product</h1>
 
             <?php if(isset($error)): ?>
                 <div class="alert alert-warning alert-dismissible fade show mt-3">

@@ -40,10 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: home.php"); 
                 exit();
             } else {
-                $errors['login'] = "Incorrect password.";
+                $errors['login'] = "Incorrect email or password.";
             }
         } else {
-            $errors['login'] = "No user found with this email.";
+            $errors['login'] = "Incorrect email or password.";
         }
     }
 }
@@ -171,7 +171,7 @@ ob_end_flush();
 </head>
 <body>
 <div class="login-container">
-    <h2>Welcome Back</h2>
+    <h2>Welcome Back To Coffee Drink</h2>
     
     <?php if (isset($errors['login'])): ?>
         <div class="alert alert-danger mb-4"><?= $errors['login'] ?></div>

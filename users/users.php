@@ -8,7 +8,7 @@ if($_SESSION['user_role']!="admin")
 include_once "../connect.php"; 
 
 $user_id = $_SESSION['user_id'];
-$query = "SELECT profile_image FROM users WHERE user_id = '$user_id' LIMIT 1";
+$query = "SELECT profile_image FROM users WHERE user_id = $user_id LIMIT 1";
 $result = mysqli_query($connection, $query);
 
 if (!$result) {

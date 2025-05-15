@@ -31,7 +31,6 @@
 
     $user = mysqli_fetch_assoc($result);
 
-
     $categories=[];
     $products=[];
     

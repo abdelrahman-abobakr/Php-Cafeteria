@@ -138,7 +138,7 @@
             border-color: #944639 !important;
         }
     </style>
-    <title>Add Product</title>
+    <title>Update Product</title>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary mb-5">

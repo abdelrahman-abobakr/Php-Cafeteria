@@ -234,7 +234,7 @@
                     </div>
                     <div class="my-3">
                         <label for="price" class="form-label">Price</label>
-                        <input type="number" min="1" name="price" id="price" class="form-control" required>
+                        <input type="number"  name="price" id="price" class="form-control" required>
                     </div>
 
                     <div class="my-3">
